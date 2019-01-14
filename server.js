@@ -5,11 +5,24 @@ var bodyParser  = require('body-parser');
 var expect      = require('chai').expect;
 var cors        = require('cors');
 
-var apiRoutes         = require('./routes/api.js');
+//var apiRoutes         = require('./routes/api.js');
 var fccTestingRoutes  = require('./routes/fcctesting.js');
 var runner            = require('./test-runner');
 
+const mongoose = require('mongoose');
+const helmet = require('helmet');
+const issueRouter = require('./routes/api.js');
+
+const url = process.env.DB;
+const connect = mongoose.connect(url);
+
+connect.then((db) => {
+  console.log("Connected correctly to server");
+}, (err) => { console.log(err); });
+
 var app = express();
+
+app.use(helmet.xssFilter())
 
 app.use('/public', express.static(process.cwd() + '/public'));
 
@@ -36,7 +49,8 @@ app.route('/')
 fccTestingRoutes(app);
 
 //Routing for API 
-apiRoutes(app);  
+//apiRoutes(app);
+app.use('/api/issues', issueRouter);
     
 //404 Not Found Middleware
 app.use(function(req, res, next) {
