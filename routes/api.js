@@ -107,16 +107,12 @@ issueRouter.route('/:project')
         console.log('Issues Added ', issue);
         res.statusCode = 201;
         res.setHeader('Content-Type', 'application/json');
-        res.json({issue_title: issue.issue_title,
-                  issue_text: issue.issue_text,
-                  created_by: issue.created_by,
-                  assigned_to: issue.asigned_to,
-                  status_text: (issue.status_text == 'close'.toLowerCase() ) ? false : true,
-                  created_on: issue.createdAt,
-                  updated_on: issue.updatedAt,
-                  _id: issue._id
-                 });
-    }, (err) => next(err))
+        res.json(issue);
+    }, (err) => {
+        err = new Error('Could not add ' + req.params.project);
+        err.status = 400;
+        return next(err);
+    })
     .catch((err) => next(err));
   })
   .put(function (req, res){
@@ -150,10 +146,14 @@ issueRouter.route('/:project/:issueId')
   .put(function (req, res, next){
     var project = req.params.project;
 
-    Issues.findByIdAndUpdate(req.params.issueId, {
+    Issues.findByIdAndUpdate(req.params.issueId, {     
         $set: req.body
     }, { new: true })
       .then((issue) => {
+        if(JSON.stringify(req.body) === '{}') {
+          res.statusCode = 418;
+          res.end("Add the information");
+        }
           res.statusCode = 200;
           res.end('Successfully updated');
       }, (err) => {
